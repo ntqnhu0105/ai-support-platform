@@ -10,6 +10,10 @@ export class UsersService {
     return this.prisma.user.findUnique({ where: { email } });
   }
 
+  findById(id: string): Promise<User | null> {
+    return this.prisma.user.findUnique({ where: { id } });
+  }
+
   create(data: {
     email: string;
     passwordHash: string;
