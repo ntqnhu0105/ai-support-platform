@@ -18,3 +18,16 @@ export function toTicketResponse(ticket: Ticket) {
     updatedAt: ticket.updatedAt,
   };
 }
+export function toTicketSummary(ticket: Ticket) {
+  return {
+    id: ticket.id,
+    code: formatTicketCode(ticket.number),
+    subject: ticket.subject,
+    status: ticket.status,
+    priority: ticket.priority,
+    customerId: ticket.customerId,
+    assigneeId: ticket.assigneeId,
+    createdAt: ticket.createdAt,
+    updatedAt: ticket.updatedAt,
+  };
+}
