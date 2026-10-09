@@ -1,7 +1,18 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import type { AuthenticatedRequest } from '../auth/auth.types.js';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
 import { CreateTicketDto } from './dto/create-ticket.dto.js';
+import { ListTicketsQueryDto } from './dto/list-tickets-query.dto.js';
 import { TicketsService } from './tickets.service.js';
 
 @Controller('tickets')
@@ -12,6 +23,11 @@ export class TicketsController {
   @Post()
   create(@Body() dto: CreateTicketDto, @Req() req: AuthenticatedRequest) {
     return this.tickets.create(req.user, dto);
+  }
+
+  @Get()
+  list(@Query() query: ListTicketsQueryDto, @Req() req: AuthenticatedRequest) {
+    return this.tickets.list(req.user, query);
   }
 
   @Get(':id')
