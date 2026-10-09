@@ -25,6 +25,7 @@ model User {
   refreshTokens RefreshToken[]
   ticketsCreated  Ticket[] @relation("TicketCustomer")
   ticketsAssigned Ticket[] @relation("TicketAssignee")
+  auditLogs AuditLog[]
 
   @@map("users")
 }
@@ -79,4 +80,19 @@ model Ticket {
   @@index([customerId])
   @@index([assigneeId])
   @@map("tickets")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  actorId   String?  @map("actor_id") @db.Uuid
+  entity    String
+  entityId  String   @map("entity_id") @db.Uuid
+  action    String
+  diff      Json?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([entity, entityId, createdAt])
+  @@map("audit_logs")
 }
