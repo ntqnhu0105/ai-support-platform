@@ -5,6 +5,8 @@ import { UsersModule } from '../users/users.module.js';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
 import { JwtAuthGuard } from './jwt-auth.guard.js';
+import { RefreshTokenService } from './refresh-token.service.js';
+
 
 @Module({
   imports: [
@@ -19,7 +21,7 @@ import { JwtAuthGuard } from './jwt-auth.guard.js';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtAuthGuard],
+  providers: [AuthService, JwtAuthGuard, RefreshTokenService],
   exports: [JwtAuthGuard],
 })
 export class AuthModule {}
