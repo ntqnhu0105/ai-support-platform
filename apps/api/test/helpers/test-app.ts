@@ -24,6 +24,7 @@ export async function createTestApp() {
 }
 
 export async function resetDatabase(prisma: PrismaService) {
+  await prisma.refreshToken.deleteMany();
   await prisma.user.deleteMany();
 }
 
