@@ -3,7 +3,10 @@ import type { AuthenticatedRequest } from '../auth/auth.types.js';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
 import { CommentsService } from './comments.service.js';
 import { CreateCommentDto } from './dto/create-comment.dto.js';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Comments')
+@ApiBearerAuth()
 @Controller('tickets/:ticketId/comments')
 @UseGuards(JwtAuthGuard)
 export class CommentsController {

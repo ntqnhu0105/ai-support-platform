@@ -20,7 +20,10 @@ import { ChangeStatusDto } from './dto/change-status.dto.js';
 import { CreateTicketDto } from './dto/create-ticket.dto.js';
 import { ListTicketsQueryDto } from './dto/list-tickets-query.dto.js';
 import { TicketsService } from './tickets.service.js';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Tickets')
+@ApiBearerAuth()
 @Controller('tickets')
 @UseGuards(JwtAuthGuard)
 export class TicketsController {
