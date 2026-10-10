@@ -26,6 +26,7 @@ model User {
   ticketsCreated  Ticket[] @relation("TicketCustomer")
   ticketsAssigned Ticket[] @relation("TicketAssignee")
   auditLogs AuditLog[]
+  comments TicketComment[]
 
   @@map("users")
 }
@@ -75,6 +76,7 @@ model Ticket {
 
   customer User  @relation("TicketCustomer", fields: [customerId], references: [id], onDelete: Restrict)
   assignee User? @relation("TicketAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  comments TicketComment[]
 
   @@index([status, priority, createdAt])
   @@index([customerId])
@@ -95,4 +97,19 @@ model AuditLog {
 
   @@index([entity, entityId, createdAt])
   @@map("audit_logs")
+}
+
+model TicketComment {
+  id         String   @id @default(uuid()) @db.Uuid
+  ticketId   String   @map("ticket_id") @db.Uuid
+  authorId   String   @map("author_id") @db.Uuid
+  body       String
+  isInternal Boolean  @default(false) @map("is_internal")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author User   @relation(fields: [authorId], references: [id], onDelete: Restrict)
+
+  @@index([ticketId, createdAt])
+  @@map("ticket_comments")
 }

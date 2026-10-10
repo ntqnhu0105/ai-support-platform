@@ -15,6 +15,7 @@ import type { CreateTicketDto } from './dto/create-ticket.dto.js';
 import type { ListTicketsQueryDto } from './dto/list-tickets-query.dto.js';
 import { canTransition } from './tickets-status.js';
 import { toTicketResponse, toTicketSummary } from './ticket.mapper.js';
+import { canViewTicket } from './ticket-access.js';
 
 const CONCURRENT_UPDATE = 'The ticket was changed by someone else, please reload and retry';
 
@@ -94,8 +95,7 @@ export class TicketsService {
 
     // Customers only see their own tickets. For anything else answer 404, not 403,
     // so the API never confirms that someone else's ticket exists.
-    const allowed = ticket && (user.role !== 'CUSTOMER' || ticket.customerId === user.sub);
-    if (!ticket || !allowed) {
+    if (!ticket || !canViewTicket(user, ticket)) {
       throw new NotFoundException('Ticket not found');
     }
     return toTicketResponse(ticket);
