@@ -6,6 +6,7 @@ config({ path: '.env.test' });
 
 process.env.JWT_ACCESS_SECRET ??= 'test-only-secret-not-for-production';
 process.env.JWT_ACCESS_TTL_SECONDS ??= '900';
+process.env.WEB_URL = 'http://localhost:3000'; // fixed, so the CORS tests never depend on the developer's shell
 
 // Safety net: refuse to run against anything that is not a test database.
 const url = process.env.DATABASE_URL;
