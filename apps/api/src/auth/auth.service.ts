@@ -7,6 +7,7 @@ import type { JwtPayload } from './auth.types.js';
 import type { LoginDto } from './dto/login.dto.js';
 import type { RegisterDto } from './dto/register.dto.js';
 import { RefreshTokenService } from './refresh-token.service.js';
+import { hashPassword } from './password.js';
 
 @Injectable()
 export class AuthService {
@@ -26,7 +27,7 @@ export class AuthService {
       throw new ConflictException('Email already registered');
     }
 
-    const passwordHash = await argon2.hash(dto.password);
+    const passwordHash = await hashPassword(dto.password);
     const user = await this.users.create({
       email: dto.email,
       passwordHash,
