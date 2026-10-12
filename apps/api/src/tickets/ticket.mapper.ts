@@ -31,3 +31,19 @@ export function toTicketSummary(ticket: Ticket) {
     updatedAt: ticket.updatedAt,
   };
 }
+export interface PersonRef {
+  id: string;
+  name: string | null;
+}
+
+export type TicketWithPeople = Ticket & { customer: PersonRef; assignee: PersonRef | null };
+
+export function toTicketDetail(ticket: TicketWithPeople) {
+  return {
+    ...toTicketResponse(ticket),
+    customer: { id: ticket.customer.id, name: ticket.customer.name },
+    assignee: ticket.assignee
+      ? { id: ticket.assignee.id, name: ticket.assignee.name }
+      : null,
+  };
+}

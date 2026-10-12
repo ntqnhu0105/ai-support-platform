@@ -14,8 +14,8 @@ import type { ChangeStatusDto } from './dto/change-status.dto.js';
 import type { CreateTicketDto } from './dto/create-ticket.dto.js';
 import type { ListTicketsQueryDto } from './dto/list-tickets-query.dto.js';
 import { canTransition } from './tickets-status.js';
-import { toTicketResponse, toTicketSummary } from './ticket.mapper.js';
 import { canViewTicket } from './ticket-access.js';
+import { toTicketDetail, toTicketResponse, toTicketSummary } from './ticket.mapper.js';
 
 const CONCURRENT_UPDATE = 'The ticket was changed by someone else, please reload and retry';
 
@@ -91,14 +91,20 @@ export class TicketsService {
   }
 
   async findOne(user: JwtPayload, id: string) {
-    const ticket = await this.prisma.ticket.findUnique({ where: { id } });
+    const ticket = await this.prisma.ticket.findUnique({
+      where: { id },
+      include: {
+        customer: { select: { id: true, name: true } },
+        assignee: { select: { id: true, name: true } },
+      },
+    });
 
     // Customers only see their own tickets. For anything else answer 404, not 403,
     // so the API never confirms that someone else's ticket exists.
     if (!ticket || !canViewTicket(user, ticket)) {
       throw new NotFoundException('Ticket not found');
     }
-    return toTicketResponse(ticket);
+      return toTicketDetail(ticket);
   }
 
   async changeStatus(user: JwtPayload, id: string, dto: ChangeStatusDto) {
