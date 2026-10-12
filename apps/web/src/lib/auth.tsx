@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from 'react';
 import { login as apiLogin, logout as apiLogout, refreshSession, type AuthUser } from './api';
+import { useQueryClient } from '@tanstack/react-query';
 
 type AuthState =
   | { status: 'loading' }
@@ -26,7 +27,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({ status: 'loading' });
-
+  const queryClient = useQueryClient();
   // Restore the session after a page load. React may run this effect twice in
   // development; both runs share a single request thanks to refreshSession().
   useEffect(() => {
@@ -40,10 +41,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => {
-    const result = await apiLogin(email, password);
-    setState({ status: 'authenticated', user: result.user });
-  }, []);
+  const login = useCallback(
+    async (email: string, password: string) => {
+      const result = await apiLogin(email, password);
+      queryClient.clear(); // never show data that was cached for a previous user
+      setState({ status: 'authenticated', user: result.user });
+    },
+    [queryClient],
+  );
 
   const logout = useCallback(async () => {
     try {
@@ -51,8 +56,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       // The session is dropped locally either way.
     }
+    queryClient.clear(); // the next person on this browser must start from nothing
     setState({ status: 'anonymous' });
-  }, []);
+  }, [queryClient]);
 
   const value = useMemo(() => ({ state, login, logout }), [state, login, logout]);
 
