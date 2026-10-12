@@ -1,11 +1,11 @@
 'use client';
-
+import Link from 'next/link';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { PriorityBadge, StatusBadge, formatLabel } from '@/components/badge';
 import { ApiError } from '@/lib/api';
-import { useAuth } from '@/lib/auth';
+import { useRedirectWhenSessionExpires, useRequireSession } from '@/lib/use-session-guard';
 import {
   PRIORITIES,
   STATUSES,
@@ -34,7 +34,7 @@ export function TicketsView() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { state, logout } = useAuth();
+  const { state, logout } = useRequireSession();
 
   const filters = useMemo(() => parseTicketFilters(searchParams), [searchParams]);
   const authenticated = state.status === 'authenticated';
@@ -70,10 +70,6 @@ export function TicketsView() {
     return () => clearTimeout(timer);
   }, [searchText, urlQuery, navigate]);
 
-  useEffect(() => {
-    if (state.status === 'anonymous') router.replace('/login');
-  }, [state.status, router]);
-
   const query = useQuery({
     queryKey: ['tickets', filters],
     queryFn: () => fetchTickets(filters),
@@ -81,12 +77,7 @@ export function TicketsView() {
     placeholderData: keepPreviousData,
   });
 
-  // The API client already tried to renew the session; a 401 here means it is really over.
-  const sessionExpired = query.error instanceof ApiError && query.error.status === 401;
-  useEffect(() => {
-    if (!sessionExpired) return;
-    void logout().then(() => router.replace('/login'));
-  }, [sessionExpired, logout, router]);
+    useRedirectWhenSessionExpires(query.error)
 
   if (state.status !== 'authenticated') {
     return (
@@ -114,12 +105,22 @@ export function TicketsView() {
             {user.name ?? user.email} ({user.role})
           </p>
         </div>
-        <button
-          onClick={onLogout}
-          className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-100"
-        >
-          Sign out
-        </button>
+                <div className="flex items-center gap-2">
+          {user.role === 'CUSTOMER' && (
+            <Link
+              href="/tickets/new"
+              className="rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-zinc-700"
+            >
+              New ticket
+            </Link>
+          )}
+          <button
+            onClick={onLogout}
+            className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-100"
+          >
+            Sign out
+          </button>
+        </div>
       </header>
 
       <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -239,25 +240,40 @@ export function TicketsView() {
                         <th className="px-4 py-2 font-medium">Created</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-zinc-200">
-                      {data.items.map((ticket) => (
-                        <tr key={ticket.id}>
-                          <td className="px-4 py-3">
-                            <span className="font-mono text-xs text-zinc-400">{ticket.code}</span>
-                            <p className="text-zinc-900">{ticket.subject}</p>
-                          </td>
-                          <td className="px-4 py-3">
-                            <StatusBadge status={ticket.status} />
-                          </td>
-                          <td className="px-4 py-3">
-                            <PriorityBadge priority={ticket.priority} />
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-3 text-zinc-500">
-                            {dateFormat.format(new Date(ticket.createdAt))}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
+                    
+                      <tbody className="divide-y divide-zinc-200">
+                        {data.items.map((ticket) => (
+                          <tr key={ticket.id} className="hover:bg-zinc-50">
+                            <td className="whitespace-nowrap px-4 py-3">
+                              <span className="font-mono text-xs text-zinc-500">
+                                {ticket.code}
+                              </span>
+                            </td>
+
+                            <td className="px-4 py-3">
+                              <Link
+                                href={`/tickets/${ticket.id}`}
+                                className="font-medium text-zinc-900 hover:underline"
+                              >
+                                {ticket.subject}
+                              </Link>
+                            </td>
+
+                            <td className="px-4 py-3">
+                              <StatusBadge status={ticket.status} />
+                            </td>
+
+                            <td className="px-4 py-3">
+                              <PriorityBadge priority={ticket.priority} />
+                            </td>
+
+                            <td className="whitespace-nowrap px-4 py-3 text-zinc-500">
+                              {dateFormat.format(new Date(ticket.createdAt))}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+
                   </table>
                 </div>
               )}
