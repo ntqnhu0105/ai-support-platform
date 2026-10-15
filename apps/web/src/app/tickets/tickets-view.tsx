@@ -3,7 +3,8 @@ import Link from 'next/link';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { PriorityBadge, StatusBadge, formatLabel } from '@/components/badge';
+import { PriorityBadge, StatusBadge } from '@/components/badge';
+import { formatLabel } from '@/lib/format';
 import { ApiError } from '@/lib/api';
 import { useRedirectWhenSessionExpires, useRequireSession } from '@/lib/use-session-guard';
 import {

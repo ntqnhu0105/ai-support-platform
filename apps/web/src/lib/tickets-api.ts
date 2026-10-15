@@ -5,6 +5,7 @@ import {
   type TicketPriority,
   type TicketStatus,
 } from './ticket-filters';
+import type { HistoryEntry } from './history';
 
 export interface TicketSummary {
   id: string;
@@ -63,3 +64,31 @@ export const postComment = (ticketId: string, input: { body: string; isInternal:
     method: 'POST',
     body: JSON.stringify(input),
   });
+
+export const changeStatus = (id: string, status: TicketStatus) =>
+  apiFetch<{ id: string }>(`/tickets/${id}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  });
+
+export const assignTicket = (id: string, assigneeId?: string) =>
+  apiFetch<{ id: string }>(`/tickets/${id}/assign`, {
+    method: 'POST',
+    body: JSON.stringify(assigneeId ? { assigneeId } : {}),
+  });
+
+export const unassignTicket = (id: string) =>
+  apiFetch<{ id: string }>(`/tickets/${id}/unassign`, { method: 'POST', body: '{}' });
+
+export const fetchHistory = (id: string) => apiFetch<HistoryEntry[]>(`/tickets/${id}/history`);
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  name: string | null;
+  role: Role;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export const fetchUsers = () => apiFetch<AdminUser[]>('/users');

@@ -16,6 +16,7 @@ import type { ListTicketsQueryDto } from './dto/list-tickets-query.dto.js';
 import { canTransition } from './tickets-status.js';
 import { canViewTicket } from './ticket-access.js';
 import { toTicketDetail, toTicketResponse, toTicketSummary } from './ticket.mapper.js';
+import { assigneeIdsIn } from '../audit/audit-diff.js';
 
 const CONCURRENT_UPDATE = 'The ticket was changed by someone else, please reload and retry';
 
@@ -179,18 +180,40 @@ export class TicketsService {
     return this.changeAssignee(user, ticket, null);
   }
 
-  async history(id: string) {
+    async history(id: string) {
     await this.requireTicket(id);
 
     const entries = await this.prisma.auditLog.findMany({
       where: { entity: 'ticket', entityId: id },
       orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+      include: { actor: { select: { id: true, name: true, role: true } } },
     });
+
+    // Assignments only store ids. Look the names up once so the UI can print sentences.
+    const personIds = [...new Set(entries.flatMap((entry) => assigneeIdsIn(entry.diff)))];
+    const people =
+      personIds.length > 0
+        ? await this.prisma.user.findMany({
+            where: { id: { in: personIds } },
+            select: { id: true, name: true },
+          })
+        : [];
+    const nameById = new Map(
+      people.map((person): [string, string | null] => [person.id, person.name]),
+    );
+
     return entries.map((entry) => ({
       id: entry.id,
       action: entry.action,
       actorId: entry.actorId,
+      actor: entry.actor,
       diff: entry.diff,
+      people: Object.fromEntries(
+        assigneeIdsIn(entry.diff).map((personId): [string, string | null] => [
+          personId,
+          nameById.get(personId) ?? null,
+        ]),
+      ),
       createdAt: entry.createdAt,
     }));
   }
