@@ -3,9 +3,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams, useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
-import { PriorityBadge, StatusBadge, formatLabel } from '@/components/badge';
+import { PriorityBadge, StatusBadge } from '@/components/badge';
 import { ApiError } from '@/lib/api';
-import { displayName, formatDateTime } from '@/lib/format';
+import { displayName, formatDateTime, formatLabel } from '@/lib/format';
 import { COMMENT_MAX, validateComment } from '@/lib/ticket-form';
 import {
   fetchComments,
@@ -14,6 +14,8 @@ import {
   type TicketComment,
 } from '@/lib/tickets-api';
 import { useRedirectWhenSessionExpires, useRequireSession } from '@/lib/use-session-guard';
+import { TicketActions } from '@/components/ticket-actions';
+import { TicketHistory } from '@/components/ticket-history';
 
 export function TicketDetailView() {
   const router = useRouter();
@@ -92,7 +94,8 @@ export function TicketDetailView() {
               {ticket.body}
             </p>
           </section>
-
+              {isStaff && <TicketActions ticket={ticket} viewer={state.user} />}
+        
           <section className="mt-6" aria-label="Conversation">
             <h2 className="text-sm font-semibold text-zinc-900">Conversation</h2>
             <Conversation
@@ -102,6 +105,7 @@ export function TicketDetailView() {
               onRetry={() => void commentsQuery.refetch()}
             />
           </section>
+          
 
           <section className="mt-6">
             {ticket.status === 'CLOSED' ? (
@@ -112,6 +116,7 @@ export function TicketDetailView() {
               <ReplyBox ticketId={ticket.id} isStaff={isStaff} />
             )}
           </section>
+              {isStaff && <TicketHistory ticketId={ticket.id} />}
         </>
       )}
     </main>
