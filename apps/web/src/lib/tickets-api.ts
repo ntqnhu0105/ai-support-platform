@@ -24,8 +24,17 @@ export interface TicketPage {
   meta: { page: number; pageSize: number; total: number; totalPages: number };
 }
 
-export function fetchTickets(filters: TicketFilters): Promise<TicketPage> {
-  return apiFetch<TicketPage>(`/tickets?${toApiQuery(filters)}`);
+export async function fetchTickets(filters: TicketFilters): Promise<TicketPage> {
+  const result = await apiFetch<TicketPage>(`/tickets?${toApiQuery(filters)}`);
+
+  console.log('[E2E] GET /tickets:', {
+    filters,
+    total: result.meta.total,
+    totalPages: result.meta.totalPages,
+    items: result.items.length,
+  });
+
+  return result;
 }
 
 export interface Person {
