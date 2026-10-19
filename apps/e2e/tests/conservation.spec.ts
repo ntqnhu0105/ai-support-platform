@@ -54,9 +54,9 @@ test.describe('conversation', () => {
   }) => {
     await signIn(page, users.customer3);
     await page.getByRole('link', { name: 'Cannot log in after changing phone' }).click();
-    await expect(page.getByText('Waiting customer')).toBeVisible();
-
-    await page
+await expect(
+  page.getByText('Waiting customer', { exact: true }).last(),
+).toBeVisible();    await page
       .getByLabel('Reply', { exact: true })
       .fill('My ID ends with 1234 and I was born in 1999.');
     await page.getByRole('button', { name: 'Send reply' }).click();
